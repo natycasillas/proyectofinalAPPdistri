@@ -1,0 +1,91 @@
+services:
+  wordpress1:
+    image: wordpress:latest
+    container_name: nodo1
+    ports:
+      - "8081:80"
+    environment:
+      WORDPRESS_DB_HOST: base_master3
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: root
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_TABLE_PREFIX: wp1_
+    volumes:
+      - ./DATA:/var/www/html
+
+  wordpress2:
+    image: wordpress:latest
+    container_name: nodo2
+    ports:
+      - "8082:80"
+    environment:
+      WORDPRESS_DB_HOST: base_master3
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: root
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_TABLE_PREFIX: wp2_
+    volumes:
+      - ./DATA2:/var/www/html
+
+  wordpress3:
+    image: wordpress:latest
+    container_name: nodo3
+    ports:
+      - "8083:80"
+    environment:
+      WORDPRESS_DB_HOST: base_master3
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: root
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_TABLE_PREFIX: wp3_
+    volumes:
+      - ./DATA3:/var/www/html
+
+  base_master3:
+    image: mysql:5.7
+    container_name: base_master3
+    ports:
+      - "3310:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: root1
+      MYSQL_PASSWORD: root1
+    command: --server-id=1 --log-bin=mysql-bin --binlog-do-db=wordpress
+    volumes:
+      - ./sqlbase:/var/lib/mysql
+  
+  base_esclavo3:
+    image: mysql:5.7
+    container_name: base_esclavo3
+    ports:
+      - "3311:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: root1
+      MYSQL_PASSWORD: root1
+    command: --server-id=2 --relay-log=esclavo-relay-bin --log-bin=mysql-bin --binlog-do-db=wordpress
+    volumes:
+      - ./sqlbase_esclavo:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: php1
+    ports:
+      - "8089:80"
+    environment:
+      PMA_HOSTS: "base_master3"
+      PMA_ARBITRARY: 1
+  
+  nginx:
+    build: 
+      context: ./nginx
+      dockerfile: dockerfile
+    container_name: nginx2
+    ports:
+      - "8085:80"
+    depends_on:
+      - wordpress1
+      - wordpress2
+      - wordpress3
